@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/prestashop-admin</path>
+    <page_callback>CRM_Prestashop_Form_Admin</page_callback>
+    <title>Admin</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>
