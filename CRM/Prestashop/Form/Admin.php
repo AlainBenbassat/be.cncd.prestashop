@@ -54,6 +54,7 @@ class CRM_Prestashop_Form_Admin extends CRM_Core_Form {
 
   private function setFormFieldsDefaultValues() {
     $defaults = [];
+    $defaults['prestashop_uri'] = $this->settings->getUri();
     $defaults['prestashop_token'] = $this->settings->getToken();
     $this->setDefaults($defaults);
   }
@@ -72,9 +73,7 @@ class CRM_Prestashop_Form_Admin extends CRM_Core_Form {
 
   private function testApi() {
     $api = new CRM_Prestashop_Api($this->settings);
-    //$api->test();
-    $data = $api->getModifiedCustomers('');
-    var_dump($data);
+    $api->test();
   }
 
   private function getRenderableElementNames() {
