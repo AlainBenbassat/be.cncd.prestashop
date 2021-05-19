@@ -6,4 +6,10 @@
     <title>Admin</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/prestashop-import-order</path>
+    <page_callback>CRM_Prestashop_Form_ImportOrder</page_callback>
+    <title>ImportOrder</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

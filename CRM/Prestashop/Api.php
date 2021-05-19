@@ -33,7 +33,7 @@ class CRM_Prestashop_Api {
   }
 
   public function getOrder($orderId) {
-    $data = $this->sendRequest("order/$orderId", []);
+    $data = $this->sendRequest("orders/$orderId", []);
 
     if (is_object($data) && property_exists($data, 'order')) {
       return $data->order;

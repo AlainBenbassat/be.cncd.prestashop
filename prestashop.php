@@ -159,14 +159,31 @@ function prestashop_civicrm_themes(&$themes) {
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
  */
-//function prestashop_civicrm_navigationMenu(&$menu) {
-//  _prestashop_civix_insert_navigation_menu($menu, 'Mailings', array(
-//    'label' => E::ts('New subliminal message'),
-//    'name' => 'mailing_subliminal_message',
-//    'url' => 'civicrm/mailing/subliminal',
-//    'permission' => 'access CiviMail',
-//    'operator' => 'OR',
-//    'separator' => 0,
-//  ));
-//  _prestashop_civix_navigationMenu($menu);
-//}
+function prestashop_civicrm_navigationMenu(&$menu) {
+  _civirules_civix_insert_navigation_menu($menu, 'Administer', [
+    'label' => 'Boutique CNCD',
+    'name' => 'boutique_cncd',
+    'url' => NULL,
+    'permission' => 'administer CiviCRM',
+    'operator' => NULL,
+    'separator' => NULL,
+  ]);
+
+  _civirules_civix_insert_navigation_menu($menu, 'Administer/boutique_cncd', [
+    'label' => 'Paramètres système',
+    'name' => 'boutique_cncd_parameters',
+    'url' => CRM_Utils_System::url('civicrm/prestashop-admin', 'reset=1', TRUE),
+    'permission' => 'administer CiviCRM',
+    'operator' => NULL,
+    'separator' => 0,
+  ]);
+
+  _civirules_civix_insert_navigation_menu($menu, 'Administer/boutique_cncd', [
+    'label' => 'Synchroniser une commande',
+    'name' => 'boutique_cncd_import_order',
+    'url' => CRM_Utils_System::url('civicrm/prestashop-import-order', 'reset=1', TRUE),
+    'permission' => 'administer CiviCRM',
+    'operator' => NULL,
+    'separator' => 0,
+  ]);
+}
