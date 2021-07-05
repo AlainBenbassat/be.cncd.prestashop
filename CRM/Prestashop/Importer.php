@@ -16,22 +16,47 @@ class CRM_Prestashop_Importer {
   }
 
   public function importOrder($orderId) {
-    // get the order from prestashop
-    $order = $this->api->getOrder($orderId);
-    if ($order) {
-      // get the customer from prestashop
-      $customer = $this->api->getCustomer($order->id_customer);
+    $order = $this->getOrderFromPrestashop($orderId);
+    $customer = $this->getCustomerFromPrestashop($order->id_customer);
 
-      // get the civicrm contact from the customer info
-      $contact = new CRM_Prestashop_Contact($customer);
-
-      // create the contribution from the order info
-      CRM_Prestashop_Contribution::create($contact->contactId, $order);
+    if ($order->id_address_invoice) {
+      $address = $this->getAddressFromPrestashop($order->id_address_invoice);
     }
     else {
-      if ($this->throwErrorWhenNotFound) {
-        throw new Exception("Commande $orderId non trouvée.");
-      }
+      $address = FALSE;
     }
+
+    // get or create the civicrm contact from the customer info
+    $contact = new CRM_Prestashop_Contact($customer, $address);
+
+    // create the contribution from the order info
+    CRM_Prestashop_Contribution::create($contact->contactId, $order);
+  }
+
+  private function getOrderFromPrestashop($orderId) {
+    $order = $this->api->getOrder($orderId);
+    if ($order === FALSE) {
+      throw new Exception("Commande $orderId non trouvée.");
+    }
+
+    return $order;
+  }
+
+  private function getCustomerFromPrestashop($customerId) {
+    $customer = $this->api->getCustomer($customerId);
+    if ($customer === FALSE) {
+      throw new Exception("Client $customerId non trouvé.");
+    }
+
+    return $customer;
+  }
+
+  private function getAddressFromPrestashop($addressId) {
+    $address = $this->api->getAddress($addressId);
+    if ($address === FALSE) {
+      throw new Exception("Adresse $addressId non trouvée.");
+    }
+
+    return $address;
   }
 }

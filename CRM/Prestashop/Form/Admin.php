@@ -27,9 +27,9 @@ class CRM_Prestashop_Form_Admin extends CRM_Core_Form {
     try {
       $values = $this->exportValues();
       $this->saveFormFieldValues($values);
-      $this->testApi();
+      $data = $this->testApi();
 
-      CRM_Core_Session::setStatus('OK', '', 'success');
+      CRM_Core_Session::setStatus($data, '', 'success');
       parent::postProcess();
     }
     catch (Exception $e) {
@@ -40,6 +40,7 @@ class CRM_Prestashop_Form_Admin extends CRM_Core_Form {
   private function addFormFields() {
     $this->add('text', 'prestashop_uri', 'Lien de la boutique');
     $this->add('text', 'prestashop_token', 'Clé webservice');
+    $this->addRadio('prestashop_access_method', "Méthode d'accès", ['basic' => 'Basic Authentication', 'ws_key' => 'Paramètre ws_key']);
   }
 
   private function addFormButtons() {
@@ -56,6 +57,7 @@ class CRM_Prestashop_Form_Admin extends CRM_Core_Form {
     $defaults = [];
     $defaults['prestashop_uri'] = $this->settings->getUri();
     $defaults['prestashop_token'] = $this->settings->getToken();
+    $defaults['prestashop_access_method'] = $this->settings->getAccessMethod();
     $this->setDefaults($defaults);
   }
 
@@ -69,11 +71,16 @@ class CRM_Prestashop_Form_Admin extends CRM_Core_Form {
     if ($v) {
       $this->settings->setToken($v);
     }
+
+    $v = CRM_Utils_Array::value('prestashop_access_method', $values);
+    if ($v) {
+      $this->settings->setAccessMethod($v);
+    }
   }
 
   private function testApi() {
     $api = new CRM_Prestashop_Api($this->settings);
-    $api->test();
+    return $api->test();
   }
 
   private function getRenderableElementNames() {

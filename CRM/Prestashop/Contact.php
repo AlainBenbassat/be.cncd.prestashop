@@ -2,6 +2,7 @@
 
 class CRM_Prestashop_Contact {
   const LOCATION_TYPE_HOME = 1;
+  const LOCATION_TYPE_INVOICING = 5;
   const PRESTASHOP_GENDER_M = 1;
   const PRESTASHOP_GENDER_F = 2;
   const PREFIX_F = 1;
@@ -11,15 +12,32 @@ class CRM_Prestashop_Contact {
 
   public $contactId;
 
-  public function __construct($customer) {
+  public function __construct($customer, $address) {
     if (!$this->findContact($customer)) {
       $this->createContact($customer);
+    }
+
+    // add the invoice address (if it does not exist yet)
+    if ($address) {
+      $this->createOrUpdateInvoiceAddress($address);
     }
   }
 
   private function findContact($customer) {
+    // find by id
+    $this->contactId = $this->findByExternalIdentifier($customer->id);
+    if ($this->contactId) {
+      return TRUE;
+    }
+
     // find by name and email
     $this->contactId = $this->findByNameAndEmail($customer->firstname, $customer->lastname, $customer->email);
+    if ($this->contactId) {
+      return TRUE;
+    }
+
+    // find by name (reversed) and email
+    $this->contactId = $this->findByNameAndEmail($customer->lastname, $customer->firstname, $customer->email);
     if ($this->contactId) {
       return TRUE;
     }
@@ -39,6 +57,7 @@ class CRM_Prestashop_Contact {
       'sequential' => 1,
       'first_name' => $customer->firstname,
       'last_name' => $customer->lastname,
+      'external_identifier' => 'boutiqueCNCD_c' . $customer->id,
       'contact_type' => "Individual",
     ];
 
@@ -56,8 +75,9 @@ class CRM_Prestashop_Contact {
     }
 
     $contact = civicrm_api3('Contact', 'create', $params);
+    $this->contactId = $contact['values'][0]['id'];
 
-    $this->createEmail($contact['values'][0], $customer->email);
+    $this->createEmail($this->contactId, $customer->email);
   }
 
   private function createEmail($contactId, $email) {
@@ -67,7 +87,22 @@ class CRM_Prestashop_Contact {
       'email' => $email,
       'location_type_id' => self::LOCATION_TYPE_HOME,
     ];
-    $contact = civicrm_api3('Contact', 'create', $params);
+    civicrm_api3('Email', 'create', $params);
+  }
+
+  private function findByExternalIdentifier($id) {
+    $params = [
+      'sequential' => 1,
+      'external_identifier' => 'boutiqueCNCD_c' . $id,
+    ];
+    $result = civicrm_api3('Contact', 'get', $params);
+
+    if ($result['count'] > 0) {
+      return $result['values'][0]['id'];
+    }
+    else {
+      return FALSE;
+    }
   }
 
   private function findByNameAndEmail($firstName, $lastName, $email) {
@@ -125,6 +160,82 @@ class CRM_Prestashop_Contact {
     }
     else {
       return FALSE;
+    }
+  }
+
+  private function createOrUpdateInvoiceAddress($addressPrestashop) {
+    $addressCiviCRM = $this->getInvoicingAddress();
+    if ($addressCiviCRM) {
+      $this->updateInvoicingAddress($addressPrestashop, $addressCiviCRM);
+    }
+    else {
+      $this->createInvoicingAddress($addressPrestashop);
+    }
+  }
+
+  private function getInvoicingAddress() {
+    $params = [
+      'sequential' => 1,
+      'contact_id' => $this->contactId,
+      'location_type_id' => self::LOCATION_TYPE_INVOICING,
+    ];
+    $result = civicrm_api3('Address', 'get', $params);
+    if ($result['count'] > 0) {
+      return $result['values'][0];
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  private function updateInvoicingAddress($addressPrestashop, $addressCiviCRM) {
+    if ($this->isAddressDifferent($addressPrestashop, $addressCiviCRM)) {
+      $this->deleteInvoicingAddress($addressCiviCRM->id);
+      $this->createInvoicingAddress($addressPrestashop);
+    }
+  }
+
+  private function isAddressDifferent($addressPrestashop, $addressCiviCRM) {
+    if ($addressCiviCRM->street_address != $addressPrestashop->address1) {
+      return TRUE;
+    }
+    if ($addressCiviCRM->supplemental_address_1 != $addressPrestashop->address2) {
+      return TRUE;
+    }
+    if ($addressCiviCRM->postal_code != $addressPrestashop->postcode) {
+      return TRUE;
+    }
+    if ($addressCiviCRM->city != $addressPrestashop->city) {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  private function createInvoicingAddress($address) {
+    $params = [
+      'contact_id' => $this->contactId,
+      'location_type_id' => self::LOCATION_TYPE_INVOICING,
+      'street_address' => $address->address1,
+      'supplemental_address_1' => $address->address2,
+      'postal_code' => $address->postcode,
+      'city' => $address->city,
+      'country_id' => $this->getCountryId($address->country_iso_code),
+    ];
+
+    civicrm_api3('Address', 'create', $params);
+  }
+
+  private function deleteInvoicingAddress($addressId) {
+    civicrm_api3('Address', 'delete', ['id' => $addressId]);
+  }
+
+  private function getCountryId($isoCode) {
+    if ($isoCode) {
+      return CRM_Core_DAO::singleValueQuery("select id from civicrm_country where iso_code = '$isoCode'");
+    }
+    else {
+      return '';
     }
   }
 
