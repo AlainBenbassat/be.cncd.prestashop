@@ -40,13 +40,19 @@ class CRM_Prestashop_Api {
     return FALSE;
   }
 
-  public function getDeliveredOrdersSince($dateSince) {
+  public function getDeliveredOrdersBetween($fromDate, $toDate) {
     $data = $this->sendRequest("orders", [
-      "filter[delivery_date]=>[$dateSince]",
+      "filter[delivery_date]=[$fromDate,$toDate]",
       'filter[current_state]=' . self::ORDER_STATUS_DELIVERED,
       'filter[valid]=1',
     ]);
-    return $data;
+
+    if (is_object($data) && property_exists($data, 'orders')) {
+      return $data->orders;
+    }
+    else {
+      return FALSE;
+    }
   }
 
   public function getCustomer($customerId) {
@@ -186,8 +192,8 @@ class CRM_Prestashop_Api {
   }
 
   private function throwErrorIfStatusIsInvalid($status, $data) {
-    if ($status != self::STATUS_OK) {
-      throw new Exception("Status = $status, but should be " . self::STATUS_OK);
+    if ($status != 0 && $status != self::STATUS_OK) {
+      throw new Exception("Status = $status, but should be " . self::STATUS_OK . ", data = $data");
     }
 
     // sometimes the status is 200 but the data contains an error message

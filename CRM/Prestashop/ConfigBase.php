@@ -30,7 +30,7 @@ class CRM_Prestashop_ConfigBase {
   }
 
 
-  protected function createOrGetOptionGroup($params, $options, $defaultOption = '') {
+  protected function createOrGetOptionGroup($params) {
     try {
       $optionGroup = civicrm_api3('OptionGroup', 'getsingle', [
         'name' => $params['name'],

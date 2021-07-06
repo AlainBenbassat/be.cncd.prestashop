@@ -57,6 +57,8 @@ function prestashop_civicrm_uninstall() {
  */
 function prestashop_civicrm_enable() {
   _prestashop_civix_civicrm_enable();
+  $config = new CRM_Prestashop_Config();
+  $config->checkConfig();
 }
 
 /**
@@ -160,7 +162,7 @@ function prestashop_civicrm_themes(&$themes) {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
  */
 function prestashop_civicrm_navigationMenu(&$menu) {
-  _civirules_civix_insert_navigation_menu($menu, 'Administer', [
+  _prestashop_civix_insert_navigation_menu($menu, 'Administer', [
     'label' => 'Boutique CNCD',
     'name' => 'boutique_cncd',
     'url' => NULL,
@@ -169,7 +171,7 @@ function prestashop_civicrm_navigationMenu(&$menu) {
     'separator' => NULL,
   ]);
 
-  _civirules_civix_insert_navigation_menu($menu, 'Administer/boutique_cncd', [
+  _prestashop_civix_insert_navigation_menu($menu, 'Administer/boutique_cncd', [
     'label' => 'Paramètres système',
     'name' => 'boutique_cncd_parameters',
     'url' => CRM_Utils_System::url('civicrm/prestashop-admin', 'reset=1', TRUE),
@@ -178,7 +180,7 @@ function prestashop_civicrm_navigationMenu(&$menu) {
     'separator' => 0,
   ]);
 
-  _civirules_civix_insert_navigation_menu($menu, 'Administer/boutique_cncd', [
+  _prestashop_civix_insert_navigation_menu($menu, 'Administer/boutique_cncd', [
     'label' => 'Synchroniser une commande',
     'name' => 'boutique_cncd_import_order',
     'url' => CRM_Utils_System::url('civicrm/prestashop-import-order', 'reset=1', TRUE),

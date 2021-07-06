@@ -5,6 +5,7 @@ class CRM_Prestashop_Contact {
   const LOCATION_TYPE_INVOICING = 5;
   const PRESTASHOP_GENDER_M = 1;
   const PRESTASHOP_GENDER_F = 2;
+  const BUYERS_GROUP_ID = 1193;
   const PREFIX_F = 1;
   const PREFIX_M = 3;
   const GENDER_F = 1;
@@ -20,7 +21,17 @@ class CRM_Prestashop_Contact {
     // add the invoice address (if it does not exist yet)
     if ($address) {
       $this->createOrUpdateInvoiceAddress($address);
+
+      // add phone (mobile gets precedence)
+      if (strlen($address->phone_mobile) > 8) {
+        $this->createOrUpdateInvoicePhone($address->phone_mobile);
+      }
+      elseif (strlen($address->phone) > 8) {
+        $this->createOrUpdateInvoicePhone($address->phone);
+      }
     }
+
+    $this->addContactToBuyersGroup();
   }
 
   private function findContact($customer) {
@@ -199,7 +210,7 @@ class CRM_Prestashop_Contact {
     if ($addressCiviCRM['street_address'] != $addressPrestashop->address1) {
       return TRUE;
     }
-    if ($addressCiviCRM['supplemental_address_1'] != $addressPrestashop->address2) {
+    if (isset($addressCiviCRM['supplemental_address_1']) && $addressCiviCRM['supplemental_address_1'] != $addressPrestashop->address2) {
       return TRUE;
     }
     if ($addressCiviCRM['postal_code'] != $addressPrestashop->postcode) {
@@ -228,6 +239,56 @@ class CRM_Prestashop_Contact {
 
   private function deleteInvoicingAddress($addressId) {
     civicrm_api3('Address', 'delete', ['id' => $addressId]);
+  }
+
+  private function createOrUpdateInvoicePhone($phone) {
+    $invoicePhone = $this->getInvoicingPhone();
+    if ($invoicePhone) {
+      $this->updateInvoicingPhone($phone);
+    }
+    else {
+      $this->createInvoicingPhone($phone);
+    }
+  }
+
+  private function getInvoicingPhone() {
+    $sql = 'select max(phone) from civicrm_phone where contact_id = ' . $this->contactId . ' and location_type_id = ' . self::LOCATION_TYPE_INVOICING;
+    return CRM_Core_DAO::singleValueQuery($sql);
+  }
+
+  private function updateInvoicingPhone($phone) {
+    $sql = "
+      update
+        civicrm_phone
+      set
+        phone = %1
+      where
+        contact_id = %2
+      and
+        location_type_id = %3
+    ";
+    $sqlParams =[
+      1 => [$phone, 'String'],
+      2 => [$this->contactId, 'Integer'],
+      3 => [self::LOCATION_TYPE_INVOICING, 'Integer'],
+    ];
+    CRM_Core_DAO::executeQuery($sql, $sqlParams);
+  }
+
+  private function createInvoicingPhone($phone) {
+    civicrm_api3('Phone', 'create', [
+      'contact_id' => $this->contactId,
+      'location_type_id' => self::LOCATION_TYPE_INVOICING,
+      'phone' => $phone,
+      'phone_type_id' => 1,
+    ]);
+  }
+
+  private function addContactToBuyersGroup() {
+    civicrm_api3('GroupContact', 'create', [
+      'contact_id' => $this->contactId,
+      'group_id' => self::BUYERS_GROUP_ID,
+    ]);
   }
 
   private function getCountryId($isoCode) {
