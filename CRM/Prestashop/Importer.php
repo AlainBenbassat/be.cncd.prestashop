@@ -27,10 +27,12 @@ class CRM_Prestashop_Importer {
     }
 
     // get or create the civicrm contact from the customer info
-    $contact = new CRM_Prestashop_Contact($customer, $address);
+    $contact = new CRM_Prestashop_Contact();
+    $contact->getOrCreate($customer, $address);
 
     // create the contribution from the order info
-    CRM_Prestashop_Contribution::create($contact->contactId, $order);
+    $contrib = new CRM_Prestashop_Contribution();
+    $contrib->create($contact->contactId, $order);
   }
 
   private function getOrderFromPrestashop($orderId) {

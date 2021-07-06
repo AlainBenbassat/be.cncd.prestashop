@@ -12,7 +12,7 @@ class CRM_Prestashop_Contact {
 
   public $contactId;
 
-  public function __construct($customer, $address) {
+  public function getOrCreate($customer, $address) {
     if (!$this->findContact($customer)) {
       $this->createContact($customer);
     }
@@ -190,22 +190,22 @@ class CRM_Prestashop_Contact {
 
   private function updateInvoicingAddress($addressPrestashop, $addressCiviCRM) {
     if ($this->isAddressDifferent($addressPrestashop, $addressCiviCRM)) {
-      $this->deleteInvoicingAddress($addressCiviCRM->id);
+      $this->deleteInvoicingAddress($addressCiviCRM['id']);
       $this->createInvoicingAddress($addressPrestashop);
     }
   }
 
   private function isAddressDifferent($addressPrestashop, $addressCiviCRM) {
-    if ($addressCiviCRM->street_address != $addressPrestashop->address1) {
+    if ($addressCiviCRM['street_address'] != $addressPrestashop->address1) {
       return TRUE;
     }
-    if ($addressCiviCRM->supplemental_address_1 != $addressPrestashop->address2) {
+    if ($addressCiviCRM['supplemental_address_1'] != $addressPrestashop->address2) {
       return TRUE;
     }
-    if ($addressCiviCRM->postal_code != $addressPrestashop->postcode) {
+    if ($addressCiviCRM['postal_code'] != $addressPrestashop->postcode) {
       return TRUE;
     }
-    if ($addressCiviCRM->city != $addressPrestashop->city) {
+    if ($addressCiviCRM['city'] != $addressPrestashop->city) {
       return TRUE;
     }
 
