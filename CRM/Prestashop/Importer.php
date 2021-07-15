@@ -14,10 +14,9 @@ class CRM_Prestashop_Importer {
   }
 
   public function importOrdersBetween($fromDate, $toDate) {
-    $orders = $this->api->getDeliveredOrdersSince($fromDate, $toDate);
+    $orders = $this->api->getDeliveredOrdersBetween($fromDate, $toDate);
     if ($orders) {
       foreach ($orders as $order) {
-        watchdog('alain', $order->id);
         $this->importOrder($order->id);
       }
     }
