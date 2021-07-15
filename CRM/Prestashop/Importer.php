@@ -13,8 +13,9 @@ class CRM_Prestashop_Importer {
     $this->config = new CRM_Prestashop_Config();
   }
 
-  public function importOrdersBetween($fromDate, $toDate) {
-    $orders = $this->api->getDeliveredOrdersBetween($fromDate, $toDate);
+  public function importOrdersByDeliveryNumber($limit) {
+    $fromDeliveryNumber = $this->getLastImportedDeliveryNumber();
+    $orders = $this->api->getDeliveredOrdersByDeliveryNumber($fromDeliveryNumber, $limit);
     if ($orders) {
       foreach ($orders as $order) {
         $this->importOrder($order->id);
@@ -67,5 +68,13 @@ class CRM_Prestashop_Importer {
     //}
 
     return $address;
+  }
+
+  private function getLastImportedDeliveryNumber() {
+    $customField = $this->config->getCustomField_deliveryNumber();
+    $table = $customField['table_name'];
+    $field = $customField['column_name'];
+    $sql = "select ifnull(max($field), 0) from $table";
+    return CRM_Core_DAO::singleValueQuery($sql);
   }
 }

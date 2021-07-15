@@ -3,6 +3,7 @@
 class CRM_Prestashop_Config extends CRM_Prestashop_ConfigBase {
   public function checkConfig() {
     $this->getCustomField_orderedProducts();
+    $this->getCustomField_deliveryNumber();
   }
 
   public function getCustomField_orderedProducts() {
@@ -31,6 +32,38 @@ class CRM_Prestashop_Config extends CRM_Prestashop_ConfigBase {
       'in_selector' => '0'
     ];
     $cache = $this->createOrGetCustomField($params);
+    return $cache;
+  }
+
+  public function getCustomField_deliveryNumber() {
+    static $cache = '';
+
+    if ($cache) {
+      return $cache;
+    }
+
+    $params = [
+      'custom_group_id' => $this->getCustomGroup_ShoppingCartDetail()['id'],
+      'name' => 'delivery_number',
+      'label' => 'Numéro de livraison',
+      'data_type' => 'Int',
+      'html_type' => 'Text',
+      'is_searchable' => '1',
+      'is_search_range' => '1',
+      'weight' => '2',
+      'is_active' => '1',
+      'is_view' => '1',
+      'text_length' => '255',
+      'note_columns' => '60',
+      'note_rows' => '4',
+      'column_name' => 'delivery_number',
+      'in_selector' => '0'
+    ];
+    $cache = $this->createOrGetCustomField($params);
+
+    // add the table name
+    $cache['table_name'] = $this->getCustomGroup_ShoppingCartDetail()['table_name'];
+
     return $cache;
   }
 

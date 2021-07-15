@@ -15,10 +15,11 @@ class CRM_Prestashop_Contribution {
     }
 
     $this->updateProducts($contribId, $order);
+    $this->updateDeliveryNumber($contribId, $order);
   }
 
   private function exists($contactId, $orderId) {
-    $sql = "select max(id) from civicrm_contribution where contact_id = $contactId and source = 'boutique_o$orderId' and financial_type_id = " . self::FINANCIAL_TYPE_ACHAT;
+    $sql = "select max(id) from civicrm_contribution where source = 'boutique_o$orderId' and financial_type_id = " . self::FINANCIAL_TYPE_ACHAT;
     $id = CRM_Core_DAO::singleValueQuery($sql);
     if ($id) {
       return $id;
@@ -58,6 +59,14 @@ class CRM_Prestashop_Contribution {
        'custom_' . $this->config->getCustomField_orderedProducts()['id'] => $products,
      ]);
     }
+  }
+
+  private function updateDeliveryNumber($contribId, $order) {
+    civicrm_api3('CustomValue','create', [
+      'entity_id' => $contribId,
+      'entity_table' => $this->config->getCustomGroup_ShoppingCartDetail()['table_name'],
+      'custom_' . $this->config->getCustomField_deliveryNumber()['id'] => $order->delivery_number,
+    ]);
   }
 
   private function removeExtraZeroes($amount) {

@@ -40,11 +40,13 @@ class CRM_Prestashop_Api {
     return FALSE;
   }
 
-  public function getDeliveredOrdersBetween($fromDate, $toDate) {
+  public function getDeliveredOrdersByDeliveryNumber($fromDeliveryNumber, $limit) {
     $data = $this->sendRequest("orders", [
-      "filter[delivery_date]=[$fromDate,$toDate]",
+      "filter[delivery_number]=>[$fromDeliveryNumber]",
       'filter[current_state]=' . self::ORDER_STATUS_DELIVERED,
       'filter[valid]=1',
+      "limit=$limit",
+      'sort=[delivery_number_ASC]',
     ]);
 
     if (is_object($data) && property_exists($data, 'orders')) {
@@ -119,12 +121,11 @@ class CRM_Prestashop_Api {
   private function sendRequest($apiFunc, $apiParams) {
     $header = $this->getCurlHeader();
     $url = $this->getUrlWithParams($apiFunc, $apiParams);
-
+//die($url);
     // send the curl reauest
     $ch = curl_init();
     $data = $this->getCurlRequestData($ch, $url, $header);
     $status = $this->getCurlRequestStatus($ch);
-
     curl_close($ch);
 
     $this->throwErrorIfStatusIsInvalid($status, $data);

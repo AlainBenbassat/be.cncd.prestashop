@@ -2,8 +2,7 @@
 use CRM_Prestashop_ExtensionUtil as E;
 
 function _civicrm_api3_prestashop_Sync_spec(&$spec) {
-  $spec['from']['api.required'] = 0;
-  $spec['to']['api.required'] = 0;
+  $spec['limit']['api.required'] = 0;
 }
 
 function civicrm_api3_prestashop_Sync($params) {
@@ -11,7 +10,7 @@ function civicrm_api3_prestashop_Sync($params) {
     civicrm_api3_prestashop_validateParams($params);
 
     $importer = new CRM_Prestashop_Importer();
-    $importer->importOrdersBetween($params['from'], $params['to']);
+    $importer->importOrdersByDeliveryNumber($params['limit']);
   }
   catch (Exception $e)  {
     throw new API_Exception('Error in ' . $e->getFile() . ' on line ' . $e->getLine() . ': ' . $e->getMessage(), $e->getCode());
@@ -19,20 +18,9 @@ function civicrm_api3_prestashop_Sync($params) {
 }
 
 function civicrm_api3_prestashop_validateParams(&$params) {
-  $from = CRM_Utils_Array::value('from', $params);
-  if ($from) {
-    civicrm_api3_prestashop_validateDate($from);
-  }
-  else {
-    $params['from'] = date('Y-m-d',strtotime("-1 days"));
-  }
-
-  $to = CRM_Utils_Array::value('to', $params);
-  if ($to) {
-    civicrm_api3_prestashop_validateDate($to);
-  }
-  else {
-    $params['to'] = date('Y-m-d');
+  $limit = CRM_Utils_Array::value('limit', $params);
+  if (!$limit || $limit < 0 || $limit > 1000) {
+    $params['limit'] = 10;
   }
 }
 

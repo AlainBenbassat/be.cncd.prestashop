@@ -9,7 +9,8 @@ class CRM_Prestashop_ConfigBase {
       ]);
     }
     catch (Exception $e) {
-      $customGroup = civicrm_api3('CustomGroup', 'create', $params);
+      $result = civicrm_api3('CustomGroup', 'create', $params);
+      $customGroup = $result['values'][0];
     }
 
     return $customGroup;
@@ -23,7 +24,9 @@ class CRM_Prestashop_ConfigBase {
       ]);
     }
     catch (Exception $e) {
-      $customField = civicrm_api3('CustomField', 'create', $params);
+      $params['sequential'] = 1;
+      $result = civicrm_api3('CustomField', 'create', $params);
+      $customField = $result['values'][0];
     }
 
     return $customField;
@@ -37,7 +40,9 @@ class CRM_Prestashop_ConfigBase {
       ]);
     }
     catch (Exception $e) {
-      $optionGroup = civicrm_api3('OptionGroup', 'create', $params);
+      $params['sequential'] = 1;
+      $result = civicrm_api3('OptionGroup', 'create', $params);
+      $optionGroup = $result['values'][0];
     }
 
     return $optionGroup;
