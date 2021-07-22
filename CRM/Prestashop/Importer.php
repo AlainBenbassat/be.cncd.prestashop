@@ -18,7 +18,12 @@ class CRM_Prestashop_Importer {
     $orders = $this->api->getDeliveredOrdersByDeliveryNumber($fromDeliveryNumber, $limit);
     if ($orders) {
       foreach ($orders as $order) {
-        $this->importOrder($order->id);
+        try {
+          $this->importOrder($order->id);
+        }
+        catch (Exception $e) {
+          watchdog('Prestashop', 'Order ' . $order->id . ': ' . $e->getMessage());
+        }
       }
     }
   }
