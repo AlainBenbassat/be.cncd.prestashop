@@ -41,7 +41,7 @@ class CRM_Prestashop_Contribution {
 
     foreach ($order->associations->order_rows as $row) {
       if ($this->isDonationProduct($row->product_name)) {
-        $amount += $this->removeExtraZeroes($row->unit_price_tax_incl);
+        $amount += $this->removeExtraZeroes($row->unit_price_tax_incl * $row->product_quantity);
       }
     }
 
