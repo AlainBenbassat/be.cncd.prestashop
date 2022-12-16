@@ -19,9 +19,15 @@ class CRM_Prestashop_Form_ImportOrder extends CRM_Core_Form {
       $importer = new CRM_Prestashop_Importer();
       $importer->throwErrorWhenNotFound = TRUE;
       $orderId = $this->getSubmittedOrderId();
-      $importer->importOrder($orderId);
 
-      CRM_Core_Session::setStatus('OK', '', 'success');
+      if ($orderId) {
+        $importer->importOrder($orderId);
+        CRM_Core_Session::setStatus('OK', '', 'success');
+      }
+      else {
+        [$before, $after] = $importer->fixMissedOrders();
+        CRM_Core_Session::setStatus("Nombre de trous dans la liste : avant = $before, après : $after", '', 'success');
+      }
     }
     catch (Exception $e) {
       CRM_Core_Session::setStatus($e->getMessage(), '', 'error');
@@ -37,7 +43,7 @@ class CRM_Prestashop_Form_ImportOrder extends CRM_Core_Form {
   }
 
   private function addFormFields() {
-    $this->add('text', 'order_id', 'Identifiant de la commande', ['placeholder' => 'p.ex. 4674'], TRUE);
+    $this->add('text', 'order_id', 'Importer une commande spécifique:<br><br><br>ou laisser vide pour vérifier les trous dans la liste de numéros de livraison', ['placeholder' => 'p.ex. 4674'], FALSE);
   }
 
   private function addFormButtons() {

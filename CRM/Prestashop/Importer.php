@@ -15,6 +15,24 @@ class CRM_Prestashop_Importer {
 
   public function importOrdersByDeliveryNumber($limit) {
     $fromDeliveryNumber = $this->getLastImportedDeliveryNumber();
+    $this->importOrders($fromDeliveryNumber, $limit);
+  }
+
+  public function fixMissedOrders() {
+    $gapListDao = $this->getDeliveryNumberGaps();
+    $countBefore = $gapListDao->N;
+
+    while ($gapListDao->fetch()) {
+      $this->importOrders($gapListDao->missing_delivery_number - 1, 1);
+    }
+
+    $gapListDao = $this->getDeliveryNumberGaps();
+    $countAfter = $gapListDao->N;
+
+    return [$countBefore, $countAfter];
+  }
+
+  public function importOrders($fromDeliveryNumber, $limit) {
     $orders = $this->api->getDeliveredOrdersByDeliveryNumber($fromDeliveryNumber, $limit);
     if ($orders) {
       foreach ($orders as $order) {
@@ -81,5 +99,37 @@ class CRM_Prestashop_Importer {
     $field = $customField['column_name'];
     $sql = "select ifnull(max($field), 0) from $table";
     return CRM_Core_DAO::singleValueQuery($sql);
+  }
+
+  private function getDeliveryNumberGaps() {
+    $customField = $this->config->getCustomField_deliveryNumber();
+    $table = $customField['table_name'];
+    $field = $customField['column_name'];
+
+    $sql = "
+      SELECT
+        mo.$field + 1 missing_delivery_number
+      FROM
+        $table mo
+      WHERE
+        NOT EXISTS (
+          SELECT
+            NULL
+          FROM
+            $table mi
+          WHERE
+            mi.$field = mo.$field + 1
+        )
+      and
+        mo.$field  > 2000
+      ORDER BY
+        mo.$field
+      LIMIT
+        100
+    ";
+
+    $dao = CRM_Core_DAO::executeQuery($sql);
+
+    return $dao;
   }
 }
